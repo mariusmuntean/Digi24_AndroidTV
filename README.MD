@@ -1,0 +1,1 @@
+A simple app for my Android TV to watch Digi24 (Romanian news channel)
