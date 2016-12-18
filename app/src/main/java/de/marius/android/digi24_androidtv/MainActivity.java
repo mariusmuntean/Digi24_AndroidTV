@@ -18,6 +18,8 @@ import android.app.Activity;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.View;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -30,16 +32,45 @@ import java.net.URI;
 /*
  * MainActivity class that loads MainFragment
  */
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnKeyListener {
 
     private static final String STREAM_URL_FALLBACK = "http://82.76.40.76:80/digi24edge/digi24live/index.m3u8";
+    VideoView videoView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        videoView = (VideoView) findViewById(R.id.videoView2);
+        videoView.setOnKeyListener(this);
+
         new GetLatestStreamUrl().execute();
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY && event.getAction() == KeyEvent.ACTION_DOWN) {
+            videoView.start();
+            return true;
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE && event.getAction() == KeyEvent.ACTION_DOWN) {
+            videoView.pause();
+            return true;
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (videoView.isPlaying()) {
+                videoView.pause();
+            } else {
+                videoView.start();
+            }
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -74,10 +105,9 @@ public class MainActivity extends Activity {
             String currentStreamUrl = shouldUseFallback ? STREAM_URL_FALLBACK : result;
 
             // Set the videoview source and start
-            VideoView vv = (VideoView) findViewById(R.id.videoView2);
-            vv.setVideoURI(Uri.parse(currentStreamUrl));
-            vv.requestFocus();
-            vv.start();
+            videoView.setVideoURI(Uri.parse(currentStreamUrl));
+            videoView.requestFocus();
+            videoView.start();
         }
     }
 }
