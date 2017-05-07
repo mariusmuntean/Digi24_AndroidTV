@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.logging.Logger;
 
 
 /*
@@ -35,17 +36,65 @@ import java.net.URI;
 public class MainActivity extends Activity implements View.OnKeyListener {
 
     private static final String STREAM_URL_FALLBACK = "http://82.76.40.76:80/digi24edge/digi24live/index.m3u8";
-    VideoView videoView;
+    private static final Logger LOG = Logger.getLogger(MainActivity.class.getSimpleName());
+
+    private VideoView videoView;
+    private boolean startingPlayback = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        LOG.info("onCreate");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
         videoView = (VideoView) findViewById(R.id.videoView2);
         videoView.setOnKeyListener(this);
 
-        new GetLatestStreamUrl().execute();
+        resolveStreammingUrlAndStartPlayback();
+
+        LOG.info("onStart");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (startingPlayback) {
+            LOG.info("onResume - startingPlayback: true");
+            return;
+        }
+
+        if (videoView != null && !videoView.isPlaying()) {
+            videoView.start();
+            LOG.info("onResume - startingPlayback: false");
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (videoView != null) {
+            videoView.pause();
+        }
+        LOG.info("onPause");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (videoView != null) {
+            videoView.stopPlayback();
+        }
+
+        LOG.info("onStop");
     }
 
     @Override
@@ -71,6 +120,11 @@ public class MainActivity extends Activity implements View.OnKeyListener {
         }
 
         return false;
+    }
+
+    private void resolveStreammingUrlAndStartPlayback() {
+        this.startingPlayback = true;
+        new GetLatestStreamUrl().execute();
     }
 
 
@@ -108,6 +162,8 @@ public class MainActivity extends Activity implements View.OnKeyListener {
             videoView.setVideoURI(Uri.parse(currentStreamUrl));
             videoView.requestFocus();
             videoView.start();
+
+            MainActivity.this.startingPlayback = false;
         }
     }
 }
