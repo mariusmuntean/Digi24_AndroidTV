@@ -15,11 +15,13 @@
 package de.marius.android.digi24_androidtv;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -38,6 +40,7 @@ public class MainActivity extends Activity implements View.OnKeyListener {
     private static final String STREAM_URL_FALLBACK = "http://82.76.40.76:80/digi24edge/digi24live/index.m3u8";
     private static final Logger LOG = Logger.getLogger(MainActivity.class.getSimpleName());
 
+    private RelativeLayout rootLayout;
     private VideoView videoView;
     private boolean startingPlayback = false;
 
@@ -53,8 +56,25 @@ public class MainActivity extends Activity implements View.OnKeyListener {
     public void onStart() {
         super.onStart();
 
+        rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
+        rootLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                togglePlaybackState();
+            }
+        });
+
         videoView = (VideoView) findViewById(R.id.videoView2);
         videoView.setOnKeyListener(this);
+        videoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                LOG.warning("Handling error");
+                resolveStreammingUrlAndStartPlayback();
+                return true;
+            }
+        });
+
 
         resolveStreammingUrlAndStartPlayback();
 
@@ -111,15 +131,21 @@ public class MainActivity extends Activity implements View.OnKeyListener {
         }
 
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && event.getAction() == KeyEvent.ACTION_DOWN) {
-            if (videoView.isPlaying()) {
-                videoView.pause();
-            } else {
-                videoView.start();
-            }
+            togglePlaybackState();
             return true;
         }
 
         return false;
+    }
+
+    private void togglePlaybackState() {
+        if (videoView.isPlaying()) {
+            videoView.pause();
+            LOG.info("paused video");
+        } else {
+            videoView.start();
+            LOG.info("resumed video");
+        }
     }
 
     private void resolveStreammingUrlAndStartPlayback() {
