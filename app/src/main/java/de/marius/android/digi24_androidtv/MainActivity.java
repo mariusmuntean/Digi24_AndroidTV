@@ -44,10 +44,14 @@ public class MainActivity extends Activity implements View.OnKeyListener {
     private VideoView videoView;
     private boolean startingPlayback = false;
 
+    private WindowAdjuster windowAdjuster;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        new WindowAdjusterFactory().getWindowAdjuster(getWindow()).enableFullscreen();
 
         LOG.info("onCreate");
     }
